@@ -35,6 +35,7 @@ my-webapp/
 
 ## Documentation map
 
+- [docs/PRD.md](docs/PRD.md) — product requirements (why/who/what; product-level umbrella)
 - [docs/requirements/overview.md](docs/requirements/overview.md) — project goal, user, success criteria
 - [docs/requirements/feature-001-hello-world.md](docs/requirements/feature-001-hello-world.md) — hello-world feature spec
 - [docs/requirements/feature-002-content-digest.md](docs/requirements/feature-002-content-digest.md) — content digest feature spec
