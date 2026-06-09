@@ -15,3 +15,12 @@
 
 ## Tooling notes
 - **No `eslint-plugin-react` until it supports ESLint 10.** The current Vite template ships ESLint 10; `eslint-plugin-react` is incompatible. `eslint-plugin-react-hooks` covers the important rules. Revisit when upstream compatibility lands.
+- **Lint script is `eslint .` (no `--ext`).** ESLint 10 flat config removed the `--ext` flag; file scoping lives in `eslint.config.js` (`files: ['**/*.{ts,tsx}']`).
+- **No `baseUrl` in `tsconfig*.json`.** TypeScript 7 deprecates it (TS 6 errors). The `@/*` path alias resolves relative to the config file without it — do not re-add `baseUrl`.
+
+## Platform / tooling notes (Windows)
+This repo was bootstrapped on Windows via Git Bash. POSIX-only tooling was substituted (see retrospective 001):
+- **Port probing uses Node**, not `netcat`/`nc` (not installed). A `net.createServer()` scan finds the first free port.
+- **Browser opens with `cmd.exe /c start ""`**, not `open` (macOS) or `xdg-open` (Linux).
+- **`.claude/launch.json`** must be created from your own terminal — Claude's self-modification classifier blocks `.claude/` writes. Only needed for Cowork's preview panel.
+- Git may warn `LF will be replaced by CRLF` — harmless; `.editorconfig` pins `end_of_line = lf` for editors.

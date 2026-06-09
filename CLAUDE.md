@@ -90,4 +90,4 @@ All run from the **repo root**:
 
 ## Self-improvement log
 
-- _(none yet — populated by retrospectives under [docs/retrospectives/](docs/retrospectives/))_
+- [001 — Hello World Bootstrap](docs/retrospectives/001-hello-world.md) — spec-first loop held up; recorded Windows/Git Bash tooling substitutions (Node port probe vs `nc`, no `baseUrl`, `eslint .` without `--ext`, `start` vs `open`) in [constraints.md](docs/constraints.md).
