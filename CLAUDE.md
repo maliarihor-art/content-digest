@@ -1,13 +1,13 @@
-# my-webapp
+# Content Digest
 
-A sandbox to learn and prototype web app features, run locally by a single developer in the browser. Built with Vite + React + TypeScript under agentic-engineering discipline: spec-first, decisions recorded, governance separated from code.
+Content Digest turns article text into a compact card — summary, key points, tags, and a topic category — filed onto a board organized by subject. Run locally by a single developer; see [docs/PRD.md](docs/PRD.md) for the product spec. Built with Vite + React + TypeScript under agentic-engineering discipline: spec-first, decisions recorded, governance separated from code.
 
 ## Repository layout
 
 Governance lives at the repo **root**; all application code lives under **`app/`**. This split is intentional (see [ADR 001](docs/decisions/001-agent-structure.md)) and is a hard rule — never mix them.
 
 ```
-my-webapp/
+content-digest/
   CLAUDE.md          ← this file (entry point for Claude)
   README.md          ← entry point for humans
   package.json       ← root pass-through scripts (npm run dev, etc.)

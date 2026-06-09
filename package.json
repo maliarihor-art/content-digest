@@ -1,5 +1,5 @@
 {
-  "name": "my-webapp",
+  "name": "content-digest",
   "private": true,
   "scripts": {
     "dev": "npm --prefix app run dev",

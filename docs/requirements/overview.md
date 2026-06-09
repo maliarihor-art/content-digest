@@ -1,16 +1,16 @@
 # Overview
 
 ## Goal
-A sandbox to learn and prototype web app features using Vite + React + TypeScript. It exists to make experimentation cheap: a clean, strictly-typed baseline where new ideas can be specced, tested, and tried without ceremony.
+Content Digest distills an article into a compact, skimmable card — a short summary, key points, tags, and a proposed topic category — and files it onto a board organized by subject. It is a personal reading-triage tool: capture what an article says without re-reading it, and keep a browsable, self-organizing collection. Built with Vite + React + TypeScript under spec-first discipline. Full product detail: [PRD.md](../PRD.md).
 
 ## Primary user / context
-A single developer (the project owner), running the app locally in a browser during development. There is no deployment target and no multi-user audience at this stage.
+A single developer (the project owner), running the app locally in a browser. Currently no multi-user audience; online publishing (via Vercel) is planned — see the [roadmap](../roadmap.md).
 
 ## Success criteria
-- The dev server starts from the repo root with `npm run dev` and serves the app over HTTP.
-- A new feature can go from a requirements doc to a passing test to working code following the spec-first loop in `CLAUDE.md`.
-- TypeScript strict mode stays on; logic lives in pure, tested modules.
-- Every feature ends with a retrospective that can feed workflow improvements back into `CLAUDE.md`.
+- Pasting article text yields a useful summary + key points + tags + category in one action, with the card filed under the right topic section.
+- The board persists across reloads.
+- A new feature goes from a requirements doc to a passing test to working code via the spec-first loop in `CLAUDE.md`.
+- TypeScript strict mode stays on; logic lives in pure, tested modules; every feature ends with a retrospective.
 
-## Out of scope (initial)
-See [constraints.md](../constraints.md) for the authoritative list. In short: no backend/API/database and no authentication.
+## Out of scope
+See [constraints.md](../constraints.md) for the authoritative list. In short: no database / server-side data storage, and no authentication. (A stateless serverless Claude proxy is allowed per [ADR 003](../decisions/003-real-ai-via-serverless.md).)

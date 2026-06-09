@@ -1,6 +1,6 @@
-# my-webapp
+# Content Digest
 
-A sandbox to learn and prototype web app features.
+Paste an article and get a summary, key points, tags, and a topic category — filed onto a board organized by subject. Built with Vite + React + TypeScript under agentic-engineering discipline (spec-first, ADRs, retros). See [docs/PRD.md](docs/PRD.md) for the full product description.
 
 ## Quick start
 
