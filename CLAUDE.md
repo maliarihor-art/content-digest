@@ -37,13 +37,15 @@ my-webapp/
 
 - [docs/requirements/overview.md](docs/requirements/overview.md) — project goal, user, success criteria
 - [docs/requirements/feature-001-hello-world.md](docs/requirements/feature-001-hello-world.md) — hello-world feature spec
+- [docs/requirements/feature-002-content-digest.md](docs/requirements/feature-002-content-digest.md) — content digest feature spec
 - [docs/decisions/001-agent-structure.md](docs/decisions/001-agent-structure.md) — ADR: root-vs-`app/` split
+- [docs/decisions/002-content-digest-pipeline.md](docs/decisions/002-content-digest-pipeline.md) — ADR: local pure-module digest pipeline
 - [docs/constraints.md](docs/constraints.md) — what NOT to do
 - [docs/retrospectives/](docs/retrospectives/) — per-feature retrospectives
 
 ## Current state
 
-Hello world greeting rendered; no features specced beyond Feature 001.
+**Content Digest** (Feature 002): paste an article's text → local heuristic pipeline produces a summary, key points, tags, and a proposed category → result is filed as a card on a topic board, persisted in `localStorage`. All analysis logic is pure and tested under `app/src/digest/` and `app/src/board/`; `App.tsx` is render-only. URL fetching and real-LLM summarization are deferred (would need a constraint amendment + ADR). The Feature 001 `greeting` module remains as the bootstrap artifact.
 
 ## Dev server
 
@@ -91,3 +93,4 @@ All run from the **repo root**:
 ## Self-improvement log
 
 - [001 — Hello World Bootstrap](docs/retrospectives/001-hello-world.md) — spec-first loop held up; recorded Windows/Git Bash tooling substitutions (Node port probe vs `nc`, no `baseUrl`, `eslint .` without `--ext`, `start` vs `open`) in [constraints.md](docs/constraints.md).
+- [002 — Content Digest](docs/retrospectives/002-content-digest.md) — escalation gate turned a backend-requiring request into a recorded in-charter decision ([ADR 002](docs/decisions/002-content-digest-pipeline.md)); pure-module pipeline kept logic fully unit-tested. Carry-forward: prefer pure modules / a DOM-test ADR over live-browser verification.
