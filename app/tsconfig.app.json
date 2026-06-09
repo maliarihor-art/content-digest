@@ -21,8 +21,7 @@
     "strictNullChecks": true,
     "noUncheckedIndexedAccess": true,
 
-    /* Path alias — mirrored in vite.config.ts */
-    "baseUrl": ".",
+    /* Path alias — mirrored in vite.config.ts (no baseUrl: TS resolves paths relative to this file) */
     "paths": { "@/*": ["./src/*"] },
 
     /* Linting */
