@@ -42,6 +42,7 @@ my-webapp/
 - [docs/requirements/feature-002-content-digest.md](docs/requirements/feature-002-content-digest.md) — content digest feature spec
 - [docs/decisions/001-agent-structure.md](docs/decisions/001-agent-structure.md) — ADR: root-vs-`app/` split
 - [docs/decisions/002-content-digest-pipeline.md](docs/decisions/002-content-digest-pipeline.md) — ADR: local pure-module digest pipeline
+- [docs/decisions/003-real-ai-via-serverless.md](docs/decisions/003-real-ai-via-serverless.md) — ADR: real AI via a Vercel serverless Claude proxy (amends no-backend)
 - [docs/constraints.md](docs/constraints.md) — what NOT to do
 - [docs/retrospectives/](docs/retrospectives/) — per-feature retrospectives
 

@@ -1,8 +1,8 @@
 # Constraints — what NOT to do
 
 ## Project scope (from interview)
-- **No backend / API / database.** This is a frontend-only sandbox. No server, persistence layer, or backend services.
 - **No authentication.** No login, accounts, sessions, or user management.
+- ~~**No backend / API / database.**~~ — **Amended by [ADR 003](decisions/003-real-ai-via-serverless.md) (2026-06-09).** A single-purpose **serverless function** is now allowed *solely* as a Claude API proxy (key kept server-side). Still forbidden: **a database / any server-side data storage** (persistence stays `localStorage`), and the proxy must be **stateless** (persists no article content or user data). Anything beyond the Claude proxy needs its own ADR.
 
 ## Engineering guardrails (baseline)
 - **No unscoped refactors.** Change only what a feature requires. Broad rewrites need their own requirements doc.
