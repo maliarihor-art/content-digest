@@ -36,6 +36,7 @@ my-webapp/
 ## Documentation map
 
 - [docs/PRD.md](docs/PRD.md) — product requirements (why/who/what; product-level umbrella)
+- [docs/roadmap.md](docs/roadmap.md) — milestones (M1–M8), one per GitHub issue, with architecture per milestone
 - [docs/task-plan.md](docs/task-plan.md) — actionable task breakdown for upcoming work
 - [docs/requirements/overview.md](docs/requirements/overview.md) — project goal, user, success criteria
 - [docs/requirements/feature-001-hello-world.md](docs/requirements/feature-001-hello-world.md) — hello-world feature spec
