@@ -49,6 +49,15 @@ describe('parseDigestResponse — valid', () => {
     expect(result.ok).toBe(true);
     if (result.ok) expect(result.digest.summary).toBe('trimmed');
   });
+
+  it('trims keyPoints and drops empty / whitespace-only ones', () => {
+    const result = parseDigestResponse({
+      ...valid,
+      keyPoints: ['  first  ', '', '   ', 'second'],
+    });
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.digest.keyPoints).toEqual(['first', 'second']);
+  });
 });
 
 describe('parseDigestResponse — malformed (rejected, never throws)', () => {
