@@ -44,6 +44,20 @@ A stateless Vercel proxy that turns article text into a validated `Digest`:
 - Live round-trip with a real Gemini key is **owner-gated** (free key from Google
   AI Studio, no card) — verified by the owner / temporary harness.
 
+## Post-review hardening (pre-merge `/code-review`)
+A high-effort review of M1+M2 produced no blockers. Applied before merge:
+- **#1** Gemini request/response mapping moved out of the boundary into a pure,
+  unit-tested `digest/ai/gemini.ts` (`buildGeminiBody` / `extractGeminiText`) —
+  honours the "logic in pure modules" rule; `api/digest.ts` is now a thin shell.
+- **#2** Added a `responseSchema` (Digest shape + category enum) to force valid
+  JSON. **Not live-verified** here (sandbox egress proxy blocked API-key auth, so
+  it returned 401 despite a working key); flagged in code to confirm on the first
+  real `vercel dev` run and flip `type` casing if Gemini 400s.
+- **#3/#5** `fetch` timeout (15s) + `console.error` on upstream failures (the
+  earlier lost 503 cause motivated this).
+- **#6** `parseDigestResponse` now trims keyPoints and drops empty ones (was
+  inconsistent with tag handling). **#7** Fixed a stale "Claude" JSDoc.
+
 ## Workflow changes (applied this session)
 - New [ADR 004](../decisions/004-free-ai-via-gemini.md); `constraints.md` gains the
   "no paid services" constraint + its ADR 004 resolution.

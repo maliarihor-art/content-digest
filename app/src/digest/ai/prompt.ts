@@ -35,7 +35,8 @@ const SYSTEM = [
 ].join('\n');
 
 /**
- * Build the Claude Messages API request payload for summarizing `text`.
+ * Build the provider-neutral digest request payload for summarizing `text`.
+ * The proxy maps it onto the active AI backend (currently Gemini; ADR 003/004).
  * Pure and deterministic: same input → deeply-equal payload. Sends nothing.
  */
 export const buildDigestPrompt = (text: string): DigestRequest => ({

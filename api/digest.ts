@@ -1,51 +1,49 @@
 import { runDigest, type DigestCaller } from '../app/src/digest/ai/service';
+import { buildGeminiBody, extractGeminiText } from '../app/src/digest/ai/gemini';
 
 /**
  * M2 — stateless serverless AI proxy (Vercel convention: repo-root `api/`).
  *
  * The only I/O boundary: it reads the key from the environment, calls Google
  * Gemini's REST `generateContent` over the built-in `fetch` (no SDK — ADR 004),
- * and forwards the pure core's HTTP result verbatim. All logic (validation,
- * prompt, parse, status mapping) lives in the unit-tested
- * `app/src/digest/ai/service.ts`. Persists nothing (ADR 003).
+ * and forwards the pure core's HTTP result verbatim. All logic — validation,
+ * prompt, the Gemini request/response mapping (`buildGeminiBody`/
+ * `extractGeminiText`), parse, status mapping — lives in unit-tested pure
+ * modules under `app/src/digest/ai/`. Persists nothing (ADR 003).
  */
 
 const GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1beta/models';
+const REQUEST_TIMEOUT_MS = 15_000;
 
-interface GeminiResponse {
-  candidates?: { content?: { parts?: { text?: string }[] } }[];
-}
-
-/** Real caller: maps the neutral request onto Gemini's REST body and returns its text. */
+/** Real caller: maps the neutral request onto Gemini's REST API and returns its text. */
 const callGemini: DigestCaller = async (request) => {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) throw new Error('GEMINI_API_KEY is not configured');
 
   const model = process.env.GEMINI_MODEL ?? request.model;
-  const userText = request.messages.map((m) => m.content).join('\n\n');
 
-  const response = await fetch(`${GEMINI_BASE}/${model}:generateContent`, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json', 'x-goog-api-key': apiKey },
-    body: JSON.stringify({
-      system_instruction: { parts: [{ text: request.system }] },
-      contents: [{ role: 'user', parts: [{ text: userText }] }],
-      generationConfig: {
-        maxOutputTokens: request.max_tokens,
-        responseMimeType: 'application/json',
-      },
-    }),
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${GEMINI_BASE}/${encodeURIComponent(model)}:generateContent`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-goog-api-key': apiKey },
+      body: JSON.stringify(buildGeminiBody(request)),
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+    });
+  } catch (err) {
+    // Network failure / timeout — log for the operator; the client sees a generic 502.
+    console.error('Gemini request failed to send:', err);
+    throw err;
+  }
 
   if (!response.ok) {
+    // Log the upstream body (rate limit, bad arg, etc.); never forwarded to the client.
+    console.error(`Gemini HTTP ${response.status}:`, await response.text().catch(() => ''));
     throw new Error(`Gemini request failed: ${response.status}`);
   }
 
-  const data = (await response.json()) as GeminiResponse;
-  const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (typeof text !== 'string' || text.length === 0) {
-    throw new Error('Gemini reply contained no text');
-  }
+  const text = extractGeminiText(await response.json());
+  if (text === null) throw new Error('Gemini reply contained no text');
   return text;
 };
 
