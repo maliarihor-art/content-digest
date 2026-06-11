@@ -2,7 +2,8 @@
 
 ## Project scope (from interview)
 - **No authentication.** No login, accounts, sessions, or user management.
-- ~~**No backend / API / database.**~~ — **Amended by [ADR 003](decisions/003-real-ai-via-serverless.md) (2026-06-09).** A single-purpose **serverless function** is now allowed *solely* as a Claude API proxy (key kept server-side). Still forbidden: **a database / any server-side data storage** (persistence stays `localStorage`), and the proxy must be **stateless** (persists no article content or user data). Anything beyond the Claude proxy needs its own ADR.
+- ~~**No backend / API / database.**~~ — **Amended by [ADR 003](decisions/003-real-ai-via-serverless.md) (2026-06-09).** A single-purpose **serverless function** is now allowed *solely* as an AI-summarization proxy (key kept server-side). Still forbidden: **a database / any server-side data storage** (persistence stays `localStorage`), and the proxy must be **stateless** (persists no article content or user data). Anything beyond the AI proxy needs its own ADR.
+- **No paid services.** Everything must run on a free tier — surfaced as a hard constraint after ADR 003 chose the (paid) Anthropic API. **[ADR 004](decisions/004-free-ai-via-gemini.md) (2026-06-11)** resolves this: the proxy uses **Google Gemini's free tier over `fetch`** (no SDK, no runtime deps, key `GEMINI_API_KEY`). Any provider change or paid dependency needs its own ADR.
 
 ## Engineering guardrails (baseline)
 - **No unscoped refactors.** Change only what a feature requires. Broad rewrites need their own requirements doc.
