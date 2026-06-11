@@ -1,5 +1,10 @@
 # Feature 003 — AI Summarization Core
 
+> **Amended by [ADR 004](../decisions/004-free-ai-via-gemini.md):** the seam is
+> provider-neutral. The default model id is now `gemini-2.5-flash` and the request
+> is mapped onto Google Gemini in the proxy. Where this doc says "Claude", read
+> "the AI provider"; the prompt/parse contracts below are unchanged.
+
 ## User story
 As a developer relying on the digest pipeline, I want the Claude integration's
 deterministic pieces — prompt construction and response validation — to be pure,

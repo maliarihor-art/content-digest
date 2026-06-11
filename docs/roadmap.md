@@ -18,7 +18,7 @@ Cards, board, grouping, and persistence already exist — so the forward milesto
 
 ## Direction
 
-Replace the local heuristic with **real Claude AI** behind a **Vercel serverless proxy** ([ADR 003](decisions/003-real-ai-via-serverless.md)), then round out UX (card management, search) and resilience. The local heuristic stays as an offline fallback. The `Digest` interface is the stable seam between "how a digest is produced" and "the board/UI".
+Replace the local heuristic with **real AI** (Google Gemini, free tier) behind a **Vercel serverless proxy** ([ADR 003](decisions/003-real-ai-via-serverless.md), [ADR 004](decisions/004-free-ai-via-gemini.md)), then round out UX (card management, search) and resilience. The local heuristic stays as an offline fallback. The `Digest` interface is the stable seam between "how a digest is produced" and "the board/UI".
 
 ---
 
@@ -29,12 +29,12 @@ Replace the local heuristic with **real Claude AI** behind a **Vercel serverless
 - **Acceptance:** specs green for prompt construction and response validation (valid → `Digest`; malformed → rejected).
 - **Depends on:** —. **Needs key?** No.
 
-## M2 — Serverless Claude proxy (`api/digest`)
-- **Goal:** a stateless function that holds the key and calls Claude.
-- **Architecture:** `api/digest.ts` (Vercel convention, repo root `api/`). Adds `@anthropic-ai/sdk`. Reads `process.env.ANTHROPIC_API_KEY`; uses M1's prompt/parse helpers; returns `Digest` JSON or a clear error. Persists nothing (constraint: stateless proxy only).
-- **Docs:** [ADR 003](decisions/003-real-ai-via-serverless.md).
+## M2 — Serverless AI proxy (`api/digest`)
+- **Goal:** a stateless function that holds the key and calls the AI provider.
+- **Architecture:** `api/digest.ts` (Vercel convention, repo root `api/`). Calls **Google Gemini's free tier over `fetch`** ([ADR 004](decisions/004-free-ai-via-gemini.md)) — no SDK, zero runtime deps. Reads `process.env.GEMINI_API_KEY`; uses M1's prompt/parse helpers (provider-neutral); returns `Digest` JSON or a clear error. Persists nothing (constraint: stateless proxy only).
+- **Docs:** [ADR 003](decisions/003-real-ai-via-serverless.md), [ADR 004](decisions/004-free-ai-via-gemini.md).
 - **Acceptance:** function returns a valid `Digest` for sample text via `vercel dev` locally.
-- **Depends on:** M1. **Needs key?** Yes (local `.env`).
+- **Depends on:** M1. **Needs key?** Yes (free Gemini key in local `.env`).
 
 ## M3 — Frontend integration + fallback
 - **Goal:** the UI uses real AI, degrading gracefully.
@@ -45,10 +45,10 @@ Replace the local heuristic with **real Claude AI** behind a **Vercel serverless
 
 ## M4 — Vercel hosting + deploy
 - **Goal:** the app (frontend + function) live on the internet.
-- **Architecture:** `vercel.json` (build `npm run build` → `app/dist`, `outputDirectory: app/dist`, functions in `api/`). `ANTHROPIC_API_KEY` set as a Vercel project secret. Replaces the earlier GitHub Pages idea (Pages can't run functions).
-- **Docs:** [ADR 003](decisions/003-real-ai-via-serverless.md).
+- **Architecture:** `vercel.json` (build `npm run build` → `app/dist`, `outputDirectory: app/dist`, functions in `api/`). `GEMINI_API_KEY` set as a Vercel project secret. Replaces the earlier GitHub Pages idea (Pages can't run functions).
+- **Docs:** [ADR 003](decisions/003-real-ai-via-serverless.md), [ADR 004](decisions/004-free-ai-via-gemini.md).
 - **Acceptance:** deployed URL serves the app and produces a real AI digest.
-- **Depends on:** M3 + prerequisites P1–P3 (Anthropic key, Vercel account+import, secret). **Needs ADR/secret?** Secret required.
+- **Depends on:** M3 + prerequisites P1–P3 (free Gemini key, Vercel account+import, secret). **Needs ADR/secret?** Secret required.
 
 ## M5 — Card management
 - **Goal:** edit the board, not just append to it.

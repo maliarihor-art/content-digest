@@ -1,23 +1,26 @@
 import { CATEGORIES } from '../category';
 
-/** Default model for digest summarization (cost-optimized; see ADR 003). */
-export const DIGEST_MODEL = 'claude-haiku-4-5';
+/** Default model for digest summarization (free-tier; see ADR 004). */
+export const DIGEST_MODEL = 'gemini-2.5-flash';
 
 /** Token budget for one digest response. */
 export const DIGEST_MAX_TOKENS = 1024;
 
-/** A single Claude Messages API message. */
-export interface ClaudeMessage {
+/** A single prompt message. Provider-neutral; the proxy maps it per provider. */
+export interface PromptMessage {
   role: 'user';
   content: string;
 }
 
-/** A ready-to-send Claude Messages API request payload. */
+/**
+ * A provider-neutral digest request. The serverless proxy (ADR 003/004) maps it
+ * onto whatever AI backend is in use (currently Google Gemini, over `fetch`).
+ */
 export interface DigestRequest {
   model: string;
   max_tokens: number;
   system: string;
-  messages: ClaudeMessage[];
+  messages: PromptMessage[];
 }
 
 const SYSTEM = [
@@ -32,7 +35,8 @@ const SYSTEM = [
 ].join('\n');
 
 /**
- * Build the Claude Messages API request payload for summarizing `text`.
+ * Build the provider-neutral digest request payload for summarizing `text`.
+ * The proxy maps it onto the active AI backend (currently Gemini; ADR 003/004).
  * Pure and deterministic: same input → deeply-equal payload. Sends nothing.
  */
 export const buildDigestPrompt = (text: string): DigestRequest => ({

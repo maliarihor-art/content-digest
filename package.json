@@ -9,6 +9,11 @@
     "test:run": "npm --prefix app run test:run",
     "lint": "npm --prefix app run lint",
     "format": "npm --prefix app run format",
-    "setup": "npm install --prefix app"
+    "setup": "npm install --prefix app",
+    "typecheck:api": "tsc -p api/tsconfig.json"
+  },
+  "devDependencies": {
+    "@types/node": "^24.12.3",
+    "typescript": "~6.0.2"
   }
 }

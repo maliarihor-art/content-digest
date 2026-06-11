@@ -13,4 +13,4 @@ A single developer (the project owner), running the app locally in a browser. Cu
 - TypeScript strict mode stays on; logic lives in pure, tested modules; every feature ends with a retrospective.
 
 ## Out of scope
-See [constraints.md](../constraints.md) for the authoritative list. In short: no database / server-side data storage, and no authentication. (A stateless serverless Claude proxy is allowed per [ADR 003](../decisions/003-real-ai-via-serverless.md).)
+See [constraints.md](../constraints.md) for the authoritative list. In short: no database / server-side data storage, no authentication, and no paid services. (A stateless serverless AI proxy — Google Gemini's free tier — is allowed per [ADR 003](../decisions/003-real-ai-via-serverless.md) / [ADR 004](../decisions/004-free-ai-via-gemini.md).)

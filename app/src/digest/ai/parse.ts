@@ -55,6 +55,11 @@ export const parseDigestResponse = (input: unknown): ParseResult => {
     return fail('"category" must be one of the taxonomy categories');
   }
 
+  const keyPoints = obj.keyPoints
+    .map((point) => point.trim())
+    .filter((point) => point.length > 0)
+    .slice(0, MAX_KEY_POINTS);
+
   const tags = Array.from(
     new Set(obj.tags.map((tag) => tag.toLowerCase().trim()).filter((tag) => tag.length > 0)),
   ).slice(0, MAX_TAGS);
@@ -63,7 +68,7 @@ export const parseDigestResponse = (input: unknown): ParseResult => {
     ok: true,
     digest: {
       summary: obj.summary.trim(),
-      keyPoints: obj.keyPoints.slice(0, MAX_KEY_POINTS),
+      keyPoints,
       tags,
       category: obj.category,
     },
