@@ -4,11 +4,12 @@ import { buildDigestPrompt } from './prompt';
 import { parseDigestResponse } from './parse';
 
 /**
- * Sends a built Claude request and resolves to the raw text reply. Injected into
- * `runDigest` so the orchestration core stays pure and unit-testable; the real
- * implementation (Anthropic SDK + key) lives in the `api/digest.ts` adapter.
+ * Sends a built digest request to the AI backend and resolves to the raw text
+ * reply. Injected into `runDigest` so the orchestration core stays pure and
+ * unit-testable; the real implementation (Gemini over `fetch` + key, ADR 004)
+ * lives in the `api/digest.ts` adapter.
  */
-export type ClaudeCaller = (request: DigestRequest) => Promise<string>;
+export type DigestCaller = (request: DigestRequest) => Promise<string>;
 
 /** HTTP-shaped outcome the serverless adapter forwards verbatim. */
 export type DigestServiceResult =
@@ -40,7 +41,7 @@ export const extractArticleText = (body: unknown): string | null => {
  */
 export const runDigest = async (
   body: unknown,
-  call: ClaudeCaller,
+  call: DigestCaller,
 ): Promise<DigestServiceResult> => {
   const text = extractArticleText(body);
   if (text === null) {
