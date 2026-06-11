@@ -43,6 +43,7 @@ content-digest/
 - [docs/requirements/feature-002-content-digest.md](docs/requirements/feature-002-content-digest.md) — content digest feature spec
 - [docs/requirements/feature-003-ai-summarization.md](docs/requirements/feature-003-ai-summarization.md) — AI summarization core (prompt + parse) spec
 - [docs/requirements/feature-003b-serverless-proxy.md](docs/requirements/feature-003b-serverless-proxy.md) — serverless Claude proxy (M2) spec
+- [docs/requirements/feature-003c-frontend-integration.md](docs/requirements/feature-003c-frontend-integration.md) — frontend integration + fallback (M3) spec
 - [docs/decisions/001-agent-structure.md](docs/decisions/001-agent-structure.md) — ADR: root-vs-`app/` split
 - [docs/decisions/002-content-digest-pipeline.md](docs/decisions/002-content-digest-pipeline.md) — ADR: local pure-module digest pipeline
 - [docs/decisions/003-real-ai-via-serverless.md](docs/decisions/003-real-ai-via-serverless.md) — ADR: real AI via a Vercel serverless proxy (amends no-backend)
@@ -57,6 +58,8 @@ content-digest/
 **M1 — AI summarization core** (Feature 003): pure, network-free Claude seam under `app/src/digest/ai/`. `buildDigestPrompt(text)` builds a deterministic Claude Messages API request payload (system prompt enumerates the taxonomy + `Digest` fields, demands JSON-only); `parseDigestResponse(input)` strictly validates a reply (object or JSON string) into a `Digest` or `{ ok: false, error }`, never throwing.
 
 **M2 — Serverless AI proxy** (Feature 003b): a stateless Vercel function turns article text into a validated `Digest`. The pure core `runDigest(body, call)` (in `app/src/digest/ai/service.ts`) validates the body, reuses M1's `buildDigestPrompt`/`parseDigestResponse`, and maps every outcome to an HTTP result (200/400/502) — never throwing; the network call is injected as a `DigestCaller`, so it's fully unit-tested with no key/network. The thin handler `api/digest.ts` (repo-root `api/`, Vercel convention) is the only I/O boundary: it reads `process.env.GEMINI_API_KEY` and calls **Google Gemini's free tier over `fetch`** (no SDK, zero runtime deps — [ADR 004](docs/decisions/004-free-ai-via-gemini.md)), then forwards the core's result. Persists nothing (ADR 003). UI wiring + heuristic fallback is M3; live `vercel dev` with a free Gemini key is owner-gated.
+
+**M3 — Frontend integration + fallback** (Feature 003c): the UI now produces real AI digests when the proxy is reachable and degrades gracefully when it isn't. The pure (but for injected I/O) `requestDigest(text, deps)` (in `app/src/digest/ai/client.ts`) POSTs `{ text }` to `/api/digest`; on `200` it re-validates the body through M1's `parseDigestResponse` (never trusts the wire), returning `{ source: 'ai', digest }`; on any non-OK status, invalid body, or network error it falls back to `buildDigest(text)` with `source: 'local'` + a human `notice` — never throws. `fetch`/`fallback` are injected (default `globalThis.fetch`/`buildDigest`), so every path is unit-tested with no network. `App.tsx` stays render-only: it added `loading` + `notice` state, an async `handleAdd`, a "Summarizing…" label, and a non-blocking fallback banner. The live **AI-success** path needs `vercel dev` + a Gemini key (owner-gated, M4); the **fallback** path is browser-verified (no `/api/digest` in plain `vite dev`).
 
 ## Dev server
 
@@ -82,6 +85,7 @@ All run from the **repo root**:
 
 - [app/vite.config.ts](app/vite.config.ts) — dev/preview ports, path alias (`@` → `app/src`)
 - [app/vitest.config.ts](app/vitest.config.ts) — test environment + alias
+- [app/src/digest/ai/client.ts](app/src/digest/ai/client.ts) — frontend AI client + heuristic fallback (M3)
 - [api/digest.ts](api/digest.ts) — serverless Claude proxy (M2); [api/tsconfig.json](api/tsconfig.json) type-checks it
 - [docs/constraints.md](docs/constraints.md) — project guardrails
 
@@ -109,3 +113,4 @@ All run from the **repo root**:
 - [002 — Content Digest](docs/retrospectives/002-content-digest.md) — escalation gate turned a backend-requiring request into a recorded in-charter decision ([ADR 002](docs/decisions/002-content-digest-pipeline.md)); pure-module pipeline kept logic fully unit-tested. Carry-forward: prefer pure modules / a DOM-test ADR over live-browser verification.
 - [003 — AI Summarization Core](docs/retrospectives/003-ai-summarization-core.md) — M1 reused the `Digest` seam for pure, network-free `buildDigestPrompt`/`parseDigestResponse`; `ParseResult` union sets up M3's heuristic fallback. Carry-forward: M2 should import the prompt payload + `DIGEST_MODEL`/`DIGEST_MAX_TOKENS` rather than rebuild them.
 - [004 — Serverless Proxy](docs/retrospectives/004-serverless-proxy.md) — M2 kept the proxy pure-testable by injecting a `DigestCaller` into `runDigest`; M1's prompt/parse were imported, not rebuilt. The escalation gate caught "everything must be free" vs. ADR 003's paid Claude → pivoted to **Gemini free tier over `fetch`** ([ADR 004](docs/decisions/004-free-ai-via-gemini.md)), absorbed cheaply by the provider-neutral seam. Carry-forward: M3 calls `POST /api/digest`, falls back to local `buildDigest` on any non-200/rate-limit/missing-key, adds loading + error states.
+- [005 — Frontend Integration](docs/retrospectives/005-frontend-integration.md) — M3 put all the request/fallback branching in a pure `requestDigest(text, deps)` with injected `fetch`/`fallback`, so `App.tsx` stayed render-only and 7 specs covered every path with no network; the `Digest` seam held a third time (board/card UI untouched). The 404-in-`vite dev` reality became the live verification of the fallback path. Carry-forward: M4 must verify the **AI-success** path on `vercel dev` (the one branch specs can't reach); when browser-checking React forms, drive inputs with the native-setter + `input`-event trick (not `preview_fill`) and prefer `preview_snapshot` over `preview_screenshot`.
