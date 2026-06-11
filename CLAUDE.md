@@ -41,6 +41,7 @@ content-digest/
 - [docs/requirements/overview.md](docs/requirements/overview.md) — project goal, user, success criteria
 - [docs/requirements/feature-001-hello-world.md](docs/requirements/feature-001-hello-world.md) — hello-world feature spec
 - [docs/requirements/feature-002-content-digest.md](docs/requirements/feature-002-content-digest.md) — content digest feature spec
+- [docs/requirements/feature-003-ai-summarization.md](docs/requirements/feature-003-ai-summarization.md) — AI summarization core (prompt + parse) spec
 - [docs/decisions/001-agent-structure.md](docs/decisions/001-agent-structure.md) — ADR: root-vs-`app/` split
 - [docs/decisions/002-content-digest-pipeline.md](docs/decisions/002-content-digest-pipeline.md) — ADR: local pure-module digest pipeline
 - [docs/decisions/003-real-ai-via-serverless.md](docs/decisions/003-real-ai-via-serverless.md) — ADR: real AI via a Vercel serverless Claude proxy (amends no-backend)
@@ -49,7 +50,9 @@ content-digest/
 
 ## Current state
 
-**Content Digest** (Feature 002): paste an article's text → local heuristic pipeline produces a summary, key points, tags, and a proposed category → result is filed as a card on a topic board, persisted in `localStorage`. All analysis logic is pure and tested under `app/src/digest/` and `app/src/board/`; `App.tsx` is render-only. URL fetching and real-LLM summarization are deferred (would need a constraint amendment + ADR). The Feature 001 `greeting` module remains as the bootstrap artifact.
+**Content Digest** (Feature 002): paste an article's text → local heuristic pipeline produces a summary, key points, tags, and a proposed category → result is filed as a card on a topic board, persisted in `localStorage`. All analysis logic is pure and tested under `app/src/digest/` and `app/src/board/`; `App.tsx` is render-only. The Feature 001 `greeting` module remains as the bootstrap artifact.
+
+**M1 — AI summarization core** (Feature 003): pure, network-free Claude seam under `app/src/digest/ai/`. `buildDigestPrompt(text)` builds a deterministic Claude Messages API request payload (system prompt enumerates the taxonomy + `Digest` fields, demands JSON-only); `parseDigestResponse(input)` strictly validates a reply (object or JSON string) into a `Digest` or `{ ok: false, error }`, never throwing. No SDK/key/network yet — sending is M2, UI wiring + heuristic fallback is M3.
 
 ## Dev server
 
@@ -98,3 +101,4 @@ All run from the **repo root**:
 
 - [001 — Hello World Bootstrap](docs/retrospectives/001-hello-world.md) — spec-first loop held up; recorded Windows/Git Bash tooling substitutions (Node port probe vs `nc`, no `baseUrl`, `eslint .` without `--ext`, `start` vs `open`) in [constraints.md](docs/constraints.md).
 - [002 — Content Digest](docs/retrospectives/002-content-digest.md) — escalation gate turned a backend-requiring request into a recorded in-charter decision ([ADR 002](docs/decisions/002-content-digest-pipeline.md)); pure-module pipeline kept logic fully unit-tested. Carry-forward: prefer pure modules / a DOM-test ADR over live-browser verification.
+- [003 — AI Summarization Core](docs/retrospectives/003-ai-summarization-core.md) — M1 reused the `Digest` seam for pure, network-free `buildDigestPrompt`/`parseDigestResponse`; `ParseResult` union sets up M3's heuristic fallback. Carry-forward: M2 should import the prompt payload + `DIGEST_MODEL`/`DIGEST_MAX_TOKENS` rather than rebuild them.
