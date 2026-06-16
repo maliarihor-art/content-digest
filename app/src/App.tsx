@@ -1,6 +1,16 @@
 import { useEffect, useMemo, useState } from 'react';
 import { requestDigest } from '@/digest/ai/client';
-import { addCard, groupByCategory, loadBoard, saveBoard } from '@/board/store';
+import {
+  addCard,
+  groupByCategory,
+  loadBoard,
+  recategorize,
+  removeCard,
+  saveBoard,
+  updateCardTitle,
+} from '@/board/store';
+import { CATEGORIES } from '@/digest/category';
+import type { Category } from '@/digest/types';
 import type { Board, Card } from '@/board/types';
 
 const newId = (): string =>
@@ -16,12 +26,53 @@ const styles = {
   section: { flex: '1 1 320px', minWidth: 280, border: '1px solid #e5e7eb', borderRadius: 8, padding: '0.75rem', background: '#fafafa' },
   card: { border: '1px solid #e5e7eb', borderRadius: 6, padding: '0.75rem', marginBottom: '0.75rem', background: '#fff' },
   tag: { display: 'inline-block', fontSize: '0.75rem', background: '#eef2ff', color: '#3730a3', borderRadius: 999, padding: '0.1rem 0.5rem', marginRight: 4, marginTop: 4 },
+  cardControls: { display: 'flex', gap: '0.5rem', alignItems: 'center', marginTop: '0.5rem', flexWrap: 'wrap' as const },
+  iconButton: { fontSize: '0.8rem', cursor: 'pointer', borderRadius: 6, border: '1px solid #d1d5db', background: '#fff', color: '#374151', padding: '0.2rem 0.5rem' },
+  select: { fontSize: '0.8rem', padding: '0.2rem 0.4rem', borderRadius: 6, border: '1px solid #d1d5db', background: '#fff' },
+  titleInput: { fontSize: '1rem', fontWeight: 600, padding: '0.2rem 0.4rem', borderRadius: 6, border: '1px solid #d1d5db', width: '100%', boxSizing: 'border-box' as const },
 };
 
-function CardView({ card }: { card: Card }) {
+function CardView({
+  card,
+  onDelete,
+  onRename,
+  onRecategorize,
+}: {
+  card: Card;
+  onDelete: () => void;
+  onRename: (title: string) => void;
+  onRecategorize: (category: Category) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draftTitle, setDraftTitle] = useState(card.title);
+
+  const startEdit = () => {
+    setDraftTitle(card.title);
+    setEditing(true);
+  };
+  const commitEdit = () => {
+    onRename(draftTitle);
+    setEditing(false);
+  };
+
   return (
     <article style={styles.card}>
-      <h3 style={{ margin: '0 0 0.25rem' }}>{card.title}</h3>
+      {editing ? (
+        <input
+          style={styles.titleInput}
+          aria-label="Edit title"
+          autoFocus
+          value={draftTitle}
+          onChange={(e) => setDraftTitle(e.target.value)}
+          onBlur={commitEdit}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') commitEdit();
+            if (e.key === 'Escape') setEditing(false);
+          }}
+        />
+      ) : (
+        <h3 style={{ margin: '0 0 0.25rem' }}>{card.title}</h3>
+      )}
       {card.source && (
         <p style={{ margin: '0 0 0.5rem', fontSize: '0.8rem', color: '#6b7280' }}>{card.source}</p>
       )}
@@ -37,6 +88,33 @@ function CardView({ card }: { card: Card }) {
         {card.digest.tags.map((tag) => (
           <span key={tag} style={styles.tag}>#{tag}</span>
         ))}
+      </div>
+      <div style={styles.cardControls}>
+        {!editing && (
+          <button type="button" style={styles.iconButton} onClick={startEdit}>
+            Edit title
+          </button>
+        )}
+        <label>
+          <span style={{ fontSize: '0.75rem', color: '#6b7280', marginRight: 4 }}>Category</span>
+          <select
+            style={styles.select}
+            aria-label="Card category"
+            value={card.digest.category}
+            onChange={(e) => onRecategorize(e.target.value as Category)}
+          >
+            {CATEGORIES.map((c) => (
+              <option key={c} value={c}>{c}</option>
+            ))}
+          </select>
+        </label>
+        <button
+          type="button"
+          style={{ ...styles.iconButton, color: '#b91c1c', borderColor: '#fecaca', marginLeft: 'auto' }}
+          onClick={onDelete}
+        >
+          Delete
+        </button>
       </div>
     </article>
   );
@@ -77,6 +155,12 @@ export default function App() {
     setSource('');
     setLoading(false);
   };
+
+  const handleDelete = (id: string) => setBoard((b) => removeCard(b, id));
+  const handleRename = (id: string, newTitle: string) =>
+    setBoard((b) => updateCardTitle(b, id, newTitle));
+  const handleRecategorize = (id: string, category: Category) =>
+    setBoard((b) => recategorize(b, id, category));
 
   return (
     <main style={styles.page}>
@@ -135,7 +219,13 @@ export default function App() {
                 <span style={{ color: '#9ca3af', fontWeight: 400 }}>({section.cards.length})</span>
               </h2>
               {section.cards.map((card) => (
-                <CardView key={card.id} card={card} />
+                <CardView
+                  key={card.id}
+                  card={card}
+                  onDelete={() => handleDelete(card.id)}
+                  onRename={(t) => handleRename(card.id, t)}
+                  onRecategorize={(c) => handleRecategorize(card.id, c)}
+                />
               ))}
             </div>
           ))}
