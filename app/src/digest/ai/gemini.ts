@@ -43,10 +43,8 @@ export interface GeminiBody {
  * constrained to the `Digest` schema.
  *
  * NOTE: `responseSchema` uses lowercase JSON-Schema `type` values per the Gemini
- * structured-output docs. This could not be live-verified in the dev sandbox
- * (egress proxy blocked API-key auth); confirm on the first real `vercel dev`
- * run. If Gemini returns HTTP 400 on the schema, flip the `type` casing
- * (lowercase ↔ uppercase) — `responseMimeType` alone already produces JSON.
+ * structured-output docs. Live-verified against `gemini-2.5-flash` during M4
+ * (HTTP 200, well-formed `Digest` JSON) — the lowercase casing is correct.
  */
 export const buildGeminiBody = (request: DigestRequest): GeminiBody => ({
   system_instruction: { parts: [{ text: request.system }] },
