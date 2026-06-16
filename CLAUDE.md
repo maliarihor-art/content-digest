@@ -44,6 +44,8 @@ content-digest/
 - [docs/requirements/feature-003-ai-summarization.md](docs/requirements/feature-003-ai-summarization.md) — AI summarization core (prompt + parse) spec
 - [docs/requirements/feature-003b-serverless-proxy.md](docs/requirements/feature-003b-serverless-proxy.md) — serverless Claude proxy (M2) spec
 - [docs/requirements/feature-003c-frontend-integration.md](docs/requirements/feature-003c-frontend-integration.md) — frontend integration + fallback (M3) spec
+- [docs/requirements/feature-003d-vercel-deploy.md](docs/requirements/feature-003d-vercel-deploy.md) — Vercel hosting + deploy (M4) spec
+- [docs/deploy.md](docs/deploy.md) — Vercel deploy runbook (owner-gated ops)
 - [docs/decisions/001-agent-structure.md](docs/decisions/001-agent-structure.md) — ADR: root-vs-`app/` split
 - [docs/decisions/002-content-digest-pipeline.md](docs/decisions/002-content-digest-pipeline.md) — ADR: local pure-module digest pipeline
 - [docs/decisions/003-real-ai-via-serverless.md](docs/decisions/003-real-ai-via-serverless.md) — ADR: real AI via a Vercel serverless proxy (amends no-backend)
@@ -60,6 +62,8 @@ content-digest/
 **M2 — Serverless AI proxy** (Feature 003b): a stateless Vercel function turns article text into a validated `Digest`. The pure core `runDigest(body, call)` (in `app/src/digest/ai/service.ts`) validates the body, reuses M1's `buildDigestPrompt`/`parseDigestResponse`, and maps every outcome to an HTTP result (200/400/502) — never throwing; the network call is injected as a `DigestCaller`, so it's fully unit-tested with no key/network. The thin handler `api/digest.ts` (repo-root `api/`, Vercel convention) is the only I/O boundary: it reads `process.env.GEMINI_API_KEY` and calls **Google Gemini's free tier over `fetch`** (no SDK, zero runtime deps — [ADR 004](docs/decisions/004-free-ai-via-gemini.md)), then forwards the core's result. Persists nothing (ADR 003). UI wiring + heuristic fallback is M3; live `vercel dev` with a free Gemini key is owner-gated.
 
 **M3 — Frontend integration + fallback** (Feature 003c): the UI now produces real AI digests when the proxy is reachable and degrades gracefully when it isn't. The pure (but for injected I/O) `requestDigest(text, deps)` (in `app/src/digest/ai/client.ts`) POSTs `{ text }` to `/api/digest`; on `200` it re-validates the body through M1's `parseDigestResponse` (never trusts the wire), returning `{ source: 'ai', digest }`; on any non-OK status, invalid body, or network error it falls back to `buildDigest(text)` with `source: 'local'` + a human `notice` — never throws. `fetch`/`fallback` are injected (default `globalThis.fetch`/`buildDigest`), so every path is unit-tested with no network. `App.tsx` stays render-only: it added `loading` + `notice` state, an async `handleAdd`, a "Summarizing…" label, and a non-blocking fallback banner. The live **AI-success** path needs `vercel dev` + a Gemini key (owner-gated, M4); the **fallback** path is browser-verified (no `/api/digest` in plain `vite dev`).
+
+**M4 — Vercel hosting + deploy** (Feature 003d): repo-side config landed — root [`vercel.json`](vercel.json) pins `buildCommand: npm run build`, `outputDirectory: app/dist`, `installCommand: npm install --prefix app`, and `maxDuration: 30` for `api/digest.ts`. No new ADR (ADR 003/004 already decided the design) and no new pure module/spec (config only) — the regression guard stays the existing 75 specs + `npm run build` + `npm run typecheck:api`. The owner-gated ops — free Gemini key, Vercel import, `GEMINI_API_KEY` secret, `vercel dev` AI-success check, and the live deploy — are in the runbook at [docs/deploy.md](docs/deploy.md). _(Deploy in progress — Current state to be finalised once the live URL is verified.)_
 
 ## Dev server
 
@@ -87,6 +91,7 @@ All run from the **repo root**:
 - [app/vitest.config.ts](app/vitest.config.ts) — test environment + alias
 - [app/src/digest/ai/client.ts](app/src/digest/ai/client.ts) — frontend AI client + heuristic fallback (M3)
 - [api/digest.ts](api/digest.ts) — serverless Claude proxy (M2); [api/tsconfig.json](api/tsconfig.json) type-checks it
+- [vercel.json](vercel.json) — Vercel build/output/function config (M4); [docs/deploy.md](docs/deploy.md) is the deploy runbook
 - [docs/constraints.md](docs/constraints.md) — project guardrails
 
 ## Escalation rules

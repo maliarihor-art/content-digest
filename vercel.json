@@ -1,0 +1,9 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "npm run build",
+  "outputDirectory": "app/dist",
+  "installCommand": "npm install --prefix app",
+  "functions": {
+    "api/digest.ts": { "maxDuration": 30 }
+  }
+}

@@ -17,6 +17,9 @@ dist-ssr/
 .idea/
 *.swp
 
+# vercel (local link/build state)
+.vercel
+
 # logs
 *.log
 
