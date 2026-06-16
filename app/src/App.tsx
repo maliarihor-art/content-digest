@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { buildDigest } from '@/digest/digest';
+import { requestDigest } from '@/digest/ai/client';
 import { addCard, groupByCategory, loadBoard, saveBoard } from '@/board/store';
 import type { Board, Card } from '@/board/types';
 
@@ -47,28 +47,35 @@ export default function App() {
   const [text, setText] = useState('');
   const [title, setTitle] = useState('');
   const [source, setSource] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
 
   useEffect(() => {
     saveBoard(board);
   }, [board]);
 
   const sections = useMemo(() => groupByCategory(board), [board]);
-  const canAdd = text.trim().length > 0;
+  const canAdd = text.trim().length > 0 && !loading;
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!canAdd) return;
+    setLoading(true);
+    setNotice(null);
     const trimmedSource = source.trim();
+    const outcome = await requestDigest(text);
     const card: Card = {
       id: newId(),
       title: title.trim() || 'Untitled',
       ...(trimmedSource ? { source: trimmedSource } : {}),
       createdAt: new Date().toISOString(),
-      digest: buildDigest(text),
+      digest: outcome.digest,
     };
     setBoard((b) => addCard(b, card));
+    setNotice(outcome.source === 'local' ? (outcome.notice ?? null) : null);
     setText('');
     setTitle('');
     setSource('');
+    setLoading(false);
   };
 
   return (
@@ -101,8 +108,18 @@ export default function App() {
           onChange={(e) => setText(e.target.value)}
         />
         <button style={styles.button} onClick={handleAdd} disabled={!canAdd}>
-          Add digest
+          {loading ? 'Summarizing…' : 'Add digest'}
         </button>
+        {loading && (
+          <span role="status" style={{ marginLeft: '0.75rem', color: '#6b7280' }}>
+            Asking the AI…
+          </span>
+        )}
+        {notice && (
+          <p role="status" style={{ marginTop: '0.75rem', color: '#92400e', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 6, padding: '0.5rem 0.75rem' }}>
+            {notice}
+          </p>
+        )}
       </section>
 
       {sections.length === 0 ? (
