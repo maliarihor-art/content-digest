@@ -12,6 +12,15 @@ import { buildGeminiBody, extractGeminiText } from '../app/src/digest/ai/gemini'
  * modules under `app/src/digest/ai/`. Persists nothing (ADR 003).
  */
 
+/**
+ * Run on Vercel's Edge runtime: the handler below is written to the Web
+ * standard (`Request` → `Response`, `req.json()`, `Response.json()`), which the
+ * Edge runtime serves natively. `fetch`, `AbortSignal.timeout`, and
+ * `process.env` are all available there — and it stays on the free tier with no
+ * new dependency.
+ */
+export const config = { runtime: 'edge' };
+
 const GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1beta/models';
 const REQUEST_TIMEOUT_MS = 15_000;
 
