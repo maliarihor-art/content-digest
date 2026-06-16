@@ -1,4 +1,5 @@
 import { CATEGORIES } from '@/digest/category';
+import type { Category } from '@/digest/types';
 import type { Board, Card, Section } from './types';
 
 const STORAGE_KEY = 'content-digest.board.v1';
@@ -8,6 +9,31 @@ export const emptyBoard = (): Board => ({ cards: [] });
 /** Pure: returns a new board with the card appended; never mutates the input. */
 export const addCard = (board: Board, card: Card): Board => ({
   cards: [...board.cards, card],
+});
+
+/** Pure: returns a new board without the card whose id matches; unknown id → no-op. */
+export const removeCard = (board: Board, id: string): Board => ({
+  cards: board.cards.filter((c) => c.id !== id),
+});
+
+/**
+ * Pure: replaces the matched card's title (trimmed; empty → 'Untitled').
+ * Other cards and the matched card's digest are untouched; unknown id → no-op.
+ */
+export const updateCardTitle = (board: Board, id: string, title: string): Board => ({
+  cards: board.cards.map((c) =>
+    c.id === id ? { ...c, title: title.trim() || 'Untitled' } : c,
+  ),
+});
+
+/**
+ * Pure: sets the matched card's digest category, preserving the rest of the digest.
+ * Other cards are untouched; unknown id → no-op.
+ */
+export const recategorize = (board: Board, id: string, category: Category): Board => ({
+  cards: board.cards.map((c) =>
+    c.id === id ? { ...c, digest: { ...c.digest, category } } : c,
+  ),
 });
 
 /** Group cards into taxonomy-ordered sections, omitting empty categories. */

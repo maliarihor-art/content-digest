@@ -5,6 +5,9 @@ import {
   groupByCategory,
   serializeBoard,
   deserializeBoard,
+  removeCard,
+  updateCardTitle,
+  recategorize,
 } from './store';
 import type { Card } from './types';
 
@@ -33,6 +36,68 @@ describe('groupByCategory', () => {
     const sections = groupByCategory(board);
     expect(sections.map((s) => s.category)).toEqual(['Technology', 'Business']);
     expect(sections[0]?.cards).toHaveLength(2);
+  });
+});
+
+describe('removeCard', () => {
+  it('returns a new board without the matched card and leaves the input untouched', () => {
+    let board = emptyBoard();
+    board = addCard(board, makeCard('1', 'Technology'));
+    board = addCard(board, makeCard('2', 'Business'));
+    const next = removeCard(board, '1');
+    expect(next.cards.map((c) => c.id)).toEqual(['2']);
+    expect(board.cards).toHaveLength(2); // input untouched
+  });
+
+  it('is a no-op for an unknown id', () => {
+    let board = emptyBoard();
+    board = addCard(board, makeCard('1', 'Technology'));
+    expect(removeCard(board, 'nope').cards.map((c) => c.id)).toEqual(['1']);
+  });
+});
+
+describe('updateCardTitle', () => {
+  it('replaces the matched card title, trimming, without touching others or the digest', () => {
+    let board = emptyBoard();
+    board = addCard(board, makeCard('1', 'Technology', 'old'));
+    board = addCard(board, makeCard('2', 'Business', 'keep'));
+    const next = updateCardTitle(board, '1', '  New title  ');
+    expect(next.cards[0]?.title).toBe('New title');
+    expect(next.cards[0]?.digest).toEqual(board.cards[0]?.digest);
+    expect(next.cards[1]?.title).toBe('keep');
+    expect(board.cards[0]?.title).toBe('old'); // input untouched
+  });
+
+  it('falls back to Untitled for an empty or whitespace title', () => {
+    let board = emptyBoard();
+    board = addCard(board, makeCard('1', 'Technology', 'old'));
+    expect(updateCardTitle(board, '1', '   ').cards[0]?.title).toBe('Untitled');
+  });
+
+  it('is a no-op for an unknown id', () => {
+    let board = emptyBoard();
+    board = addCard(board, makeCard('1', 'Technology', 'old'));
+    expect(updateCardTitle(board, 'nope', 'x').cards[0]?.title).toBe('old');
+  });
+});
+
+describe('recategorize', () => {
+  it('sets the matched card category, preserving the rest of the digest and other cards', () => {
+    let board = emptyBoard();
+    board = addCard(board, makeCard('1', 'Technology'));
+    board = addCard(board, makeCard('2', 'Business'));
+    const next = recategorize(board, '1', 'Health');
+    expect(next.cards[0]?.digest.category).toBe('Health');
+    expect(next.cards[0]?.digest.summary).toBe('s');
+    expect(next.cards[0]?.digest.tags).toEqual(['t']);
+    expect(next.cards[1]?.digest.category).toBe('Business');
+    expect(board.cards[0]?.digest.category).toBe('Technology'); // input untouched
+  });
+
+  it('is a no-op for an unknown id', () => {
+    let board = emptyBoard();
+    board = addCard(board, makeCard('1', 'Technology'));
+    expect(recategorize(board, 'nope', 'Health').cards[0]?.digest.category).toBe('Technology');
   });
 });
 
